@@ -480,6 +480,10 @@ func matchFilter(val any, f query.Filter) bool {
 		sVal := strings.ToLower(fmt.Sprintf("%v", val))
 		pat := strings.ToLower(strings.ReplaceAll(fmt.Sprintf("%v", f.Value), "%", ""))
 		return strings.Contains(sVal, pat)
+	case query.OpNotLike:
+		sVal := strings.ToLower(fmt.Sprintf("%v", val))
+		pat := strings.ToLower(strings.ReplaceAll(fmt.Sprintf("%v", f.Value), "%", ""))
+		return !strings.Contains(sVal, pat)
 	case query.OpIn:
 		vSlice := reflect.ValueOf(f.Value)
 		if vSlice.Kind() == reflect.Slice {
@@ -490,6 +494,10 @@ func matchFilter(val any, f query.Filter) bool {
 			}
 		}
 		return false
+	case query.OpNin:
+		return !matchFilter(val, query.Filter{Op: query.OpIn, Value: f.Value})
+	case query.OpBetween:
+		return compareValues(val, f.Value) >= 0 && compareValues(val, f.ValueTo) <= 0
 	default:
 		return true
 	}
