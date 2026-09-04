@@ -54,6 +54,9 @@ func (c *MemoryDataSetCompiler) Compile(ctx context.Context, ast *planner.QueryA
 	var joinClauses []string
 	for _, j := range ast.Joins {
 		onCondition := fmt.Sprintf("\"%s\".\"%s\" = \"%s\".\"%s\"", j.FromTable, j.FromField, j.Alias, j.ToField)
+		if j.ConvertString {
+			onCondition = fmt.Sprintf("CAST(\"%s\".\"%s\" AS TEXT) = CAST(\"%s\".\"%s\" AS TEXT)", j.FromTable, j.FromField, j.Alias, j.ToField)
+		}
 		joinClauses = append(joinClauses, fmt.Sprintf("LEFT JOIN \"%s\" AS \"%s\" ON %s", j.ToTable, j.Alias, onCondition))
 	}
 
