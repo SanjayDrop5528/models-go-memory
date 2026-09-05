@@ -67,9 +67,17 @@ func (c *MemoryDataSetCompiler) Compile(ctx context.Context, ast *planner.QueryA
 		joinClauses = append(joinClauses, fmt.Sprintf("LEFT JOIN \"%s\" AS \"%s\" ON %s", j.ToTable, j.Alias, onCondition))
 	}
 
+	var groupByCols []string
+	for _, g := range ast.GroupBy {
+		groupByCols = append(groupByCols, fmt.Sprintf("\"%s\".\"%s\"", g.Table, g.Field))
+	}
+
 	sql := fmt.Sprintf("SELECT\n  %s\n%s", strings.Join(selectCols, ",\n  "), fromClause)
 	if len(joinClauses) > 0 {
 		sql += "\n" + strings.Join(joinClauses, "\n")
+	}
+	if len(groupByCols) > 0 {
+		sql += "\nGROUP BY " + strings.Join(groupByCols, ", ")
 	}
 
 	return &compiler.CompiledPipeline{
