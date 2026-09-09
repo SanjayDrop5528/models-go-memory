@@ -333,14 +333,29 @@ func (a *MemoryAdapter) Find(ctx context.Context, ref model.ModelRef, q query.Qu
 
 	result := filtered[offset:end]
 
-	// 4. Project fields
-	if len(q.Fields) > 0 {
+	// 4. Project fields & handle ExcludedColumns
+	if len(q.Fields) > 0 || len(q.ExcludedColumns) > 0 {
+		excludeMap := make(map[string]bool)
+		for _, ef := range q.ExcludedColumns {
+			excludeMap[ef] = true
+		}
+
 		projected := make([]map[string]any, len(result))
 		for i, r := range result {
 			proj := make(map[string]any)
-			for _, field := range q.Fields {
-				if v, ok := r[field]; ok {
-					proj[field] = v
+			if len(q.Fields) > 0 {
+				for _, field := range q.Fields {
+					if !excludeMap[field] {
+						if v, ok := r[field]; ok {
+							proj[field] = v
+						}
+					}
+				}
+			} else {
+				for k, v := range r {
+					if !excludeMap[k] {
+						proj[k] = v
+					}
 				}
 			}
 			projected[i] = proj
@@ -434,12 +449,58 @@ func (a *MemoryAdapter) Delete(ctx context.Context, ref model.ModelRef, id any) 
 }
 
 func matchQuery(row map[string]any, q query.Query) bool {
-	if len(q.Filters) == 0 {
+	if len(q.Filters) == 0 && len(q.RawWheres) == 0 && len(q.WhereGroups) == 0 {
 		return true
 	}
 
 	for _, f := range q.Filters {
 		matched := matchFilter(row[f.Field], f)
+		if q.LogicalOp == query.OpOr {
+			if matched {
+				return true
+			}
+		} else {
+			if !matched {
+				return false
+			}
+		}
+	}
+
+	for _, rw := range q.RawWheres {
+		parts := strings.Fields(strings.TrimSpace(rw.Query))
+		if len(parts) >= 3 && len(rw.Args) > 0 {
+			field := parts[0]
+			op := parts[1]
+			val := rw.Args[0]
+			var matched bool
+			switch op {
+			case "=", "==":
+				matched = fmt.Sprintf("%v", row[field]) == fmt.Sprintf("%v", val)
+			case "!=", "<>":
+				matched = fmt.Sprintf("%v", row[field]) != fmt.Sprintf("%v", val)
+			case ">":
+				matched = compareValues(row[field], val) > 0
+			case ">=":
+				matched = compareValues(row[field], val) >= 0
+			case "<":
+				matched = compareValues(row[field], val) < 0
+			case "<=":
+				matched = compareValues(row[field], val) <= 0
+			}
+			if q.LogicalOp == query.OpOr {
+				if matched {
+					return true
+				}
+			} else {
+				if !matched {
+					return false
+				}
+			}
+		}
+	}
+
+	for _, wg := range q.WhereGroups {
+		matched := matchQuery(row, wg.Query)
 		if q.LogicalOp == query.OpOr {
 			if matched {
 				return true
