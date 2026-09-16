@@ -1,8 +1,22 @@
+// Package memory provides an in-memory, thread-safe storage adapter, query engine,
+// and Dataset Studio compiler for testing, local prototyping, and mock environments.
+//
+// File: memory.go
+// Usage:
+//   This file implements the MemoryAdapter, an in-memory, fully-featured adapter.Adapter
+//   implementation. It supports table schema management, CRUD operations (Create, Find,
+//   Update, Patch, Delete), auto-increment primary keys, query filtering (AND/OR, BETWEEN,
+//   IN, LIKE), sorting, and in-memory transactional semantics.
 package memory
 
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"sort"
+	"strings"
+	"sync"
+
 	"github.com/SanjayDrop5528/models-go-engine/adapter"
 	"github.com/SanjayDrop5528/models-go-engine/diff"
 	"github.com/SanjayDrop5528/models-go-engine/execution"
@@ -10,22 +24,27 @@ import (
 	"github.com/SanjayDrop5528/models-go-engine/plan"
 	"github.com/SanjayDrop5528/models-go-engine/query"
 	"github.com/SanjayDrop5528/models-go-engine/schema"
-	"reflect"
-	"sort"
-	"strings"
-	"sync"
 )
 
 // MemoryAdapter is a concurrent, in-memory implementation of the Adapter interface.
 // It is ideal for rapid testing, mock setups, and verifying diff/migration logic.
 type MemoryAdapter struct {
 	mu      sync.RWMutex
-	schemas map[string]*schema.Schema        // tableName -> Schema
-	data    map[string][]map[string]any      // tableName -> records
-	autoInc map[string]int64                 // tableName -> current auto increment id
+	schemas map[string]*schema.Schema   // tableName -> Schema
+	data    map[string][]map[string]any // tableName -> records
+	autoInc map[string]int64            // tableName -> current auto increment id
 }
 
 // NewMemoryAdapter creates a new in-memory adapter.
+//
+// Purpose:
+//   Initializes a clean, thread-safe MemoryAdapter with empty schema and record stores.
+//
+// Where it is used:
+//   - Instantiated across unit tests, example guides, and test servers.
+//
+// When can it be used:
+//   - Whenever running database operations without external database dependencies.
 func NewMemoryAdapter() *MemoryAdapter {
 	return &MemoryAdapter{
 		schemas: make(map[string]*schema.Schema),
@@ -34,8 +53,42 @@ func NewMemoryAdapter() *MemoryAdapter {
 	}
 }
 
+// Name returns the driver identifier string for the memory adapter.
+//
+// Purpose:
+//   Identifies the adapter as "memory".
+//
+// Where it is used:
+//   - In engine initialization, routing, and logging.
+//
+// When can it be used:
+//   - Whenever querying the adapter driver name.
 func (a *MemoryAdapter) Name() string {
 	return "memory"
+}
+
+// Capabilities returns the in-memory adapter capabilities matrix.
+//
+// Purpose:
+//   Reports supported capabilities (relational simulation, transactions, procedures, functions, query mode) for the in-memory store.
+//
+// Where it is used:
+//   - In DatasetService, validation engines, and capability matrix inspections.
+//
+// When can it be used:
+//   - At runtime whenever callers need to determine the capability profile of the Memory adapter.
+func (a *MemoryAdapter) Capabilities() adapter.Capabilities {
+	return adapter.Capabilities{
+		Category:                    adapter.StorageCategoryRelational,
+		SupportsTransactions:        true,
+		SupportsDDLMigration:        false,
+		SupportsProcedures:          true,
+		SupportsFunctions:           true,
+		SupportsAggregationPipeline: false,
+		SupportsJSONValidation:      false,
+		SupportsIndexes:             false,
+		SupportedSaveModes:          []string{"QUERY"},
+	}
 }
 
 // NativeClient returns the *MemoryAdapter instance.

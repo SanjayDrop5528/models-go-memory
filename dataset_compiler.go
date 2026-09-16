@@ -1,3 +1,10 @@
+// Package memory provides an in-memory, thread-safe storage adapter, query engine,
+// and Dataset Studio compiler for testing, local prototyping, and mock environments.
+//
+// File: dataset_compiler.go
+// Usage:
+//   This file implements the MemoryDataSetCompiler, translating QueryAST plans into
+//   portable ANSI SQL expressions for execution in in-memory or generic database environments.
 package memory
 
 import (
@@ -15,11 +22,29 @@ import (
 type MemoryDataSetCompiler struct{}
 
 // NewMemoryDataSetCompiler creates a new Memory dataset compiler instance.
+//
+// Purpose:
+//   Initializes a MemoryDataSetCompiler for in-memory dataset compilation.
+//
+// Where it is used:
+//   - Instantiated in MemoryAdapter.DataSetCompiler and standalone unit tests.
+//
+// When can it be used:
+//   - When compiling dataset pipelines for in-memory execution or offline previews.
 func NewMemoryDataSetCompiler() *MemoryDataSetCompiler {
 	return &MemoryDataSetCompiler{}
 }
 
 // Compile compiles the QueryAST into generic SQL.
+//
+// Purpose:
+//   Translates a QueryAST execution plan into ANSI SQL with projections, joins, WHERE filters, and GROUP BY.
+//
+// Where it is used:
+//   - Called by DataSetService when driver is "memory".
+//
+// When can it be used:
+//   - When running datasets without an external SQL or document database server.
 func (c *MemoryDataSetCompiler) Compile(ctx context.Context, ast *planner.QueryAST, ds *domain.DataSet) (*compiler.CompiledPipeline, error) {
 	if ast == nil {
 		return nil, domain.NewError(domain.ErrPipelineCompilationFailed, "cannot compile nil AST")
