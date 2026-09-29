@@ -4,10 +4,48 @@ import (
 	"context"
 	"testing"
 
+	"github.com/SanjayDrop5528/models-go-engine/adapter"
+	"github.com/SanjayDrop5528/models-go-engine/crud"
 	"github.com/SanjayDrop5528/models-go-engine/model"
 	"github.com/SanjayDrop5528/models-go-engine/query"
 	"github.com/SanjayDrop5528/models-go-memory"
 )
+
+type memoryModelResolver map[string]*model.Model
+
+func (r memoryModelResolver) GetActive(_ context.Context, id string) (*model.Model, error) {
+	return r[id], nil
+}
+
+func TestMemory_CRUDEngineHydratesRelations(t *testing.T) {
+	ctx := context.Background()
+	store := memory.NewMemoryAdapter()
+	registry := adapter.NewRegistry()
+	registry.Register("memory", store)
+
+	customer := &model.Model{ID: "customer", Name: "Customer", StorageName: "customers", Database: "memory", PrimaryKey: &model.PrimaryKey{Columns: []string{"id"}}}
+	line := &model.Model{ID: "line", Name: "Line", StorageName: "lines", Database: "memory", PrimaryKey: &model.PrimaryKey{Columns: []string{"id"}}}
+	order := &model.Model{
+		ID: "order", Name: "Order", StorageName: "orders", Database: "memory", PrimaryKey: &model.PrimaryKey{Columns: []string{"id"}},
+		Relations: []model.Relation{
+			{Name: "Customer", Type: model.RelManyToOne, TargetModel: "customer", ForeignKey: "customer_id", TargetKey: "id", LoadWithChildren: true},
+			{Name: "Lines", Type: model.RelOneToMany, TargetModel: "line", ForeignKey: "order_id", TargetKey: "id", LoadWithChildren: true},
+		},
+	}
+	_, _ = store.Create(ctx, customer.Ref(), map[string]any{"id": "c1", "name": "Ada"})
+	_, _ = store.Create(ctx, order.Ref(), map[string]any{"id": "o1", "customer_id": "c1"})
+	_, _ = store.Create(ctx, line.Ref(), map[string]any{"id": "l1", "order_id": "o1"})
+
+	engine := crud.NewEngine(registry)
+	engine.SetModelResolver(memoryModelResolver{"customer": customer, "line": line})
+	rows, _, err := engine.Find(ctx, order, query.New())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rows[0]["Customer"].(map[string]any)["name"] != "Ada" || len(rows[0]["Lines"].([]map[string]any)) != 1 {
+		t.Fatalf("relations were not hydrated: %+v", rows[0])
+	}
+}
 
 func TestMemory_UnifiedQuery(t *testing.T) {
 	ctx := context.Background()

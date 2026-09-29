@@ -3,19 +3,22 @@
 //
 // File: memory.go
 // Usage:
-//   This file implements the MemoryAdapter, an in-memory, fully-featured adapter.Adapter
-//   implementation. It supports table schema management, CRUD operations (Create, Find,
-//   Update, Patch, Delete), auto-increment primary keys, query filtering (AND/OR, BETWEEN,
-//   IN, LIKE), sorting, and in-memory transactional semantics.
+//
+//	This file implements the MemoryAdapter, an in-memory, fully-featured adapter.Adapter
+//	implementation. It supports table schema management, CRUD operations (Create, Find,
+//	Update, Patch, Delete), auto-increment primary keys, query filtering (AND/OR, BETWEEN,
+//	IN, LIKE), sorting, and in-memory transactional semantics.
 package memory
 
 import (
 	"context"
 	"fmt"
+	"log"
 	"reflect"
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/SanjayDrop5528/models-go-engine/adapter"
 	"github.com/SanjayDrop5528/models-go-engine/diff"
@@ -38,7 +41,8 @@ type MemoryAdapter struct {
 // NewMemoryAdapter creates a new in-memory adapter.
 //
 // Purpose:
-//   Initializes a clean, thread-safe MemoryAdapter with empty schema and record stores.
+//
+//	Initializes a clean, thread-safe MemoryAdapter with empty schema and record stores.
 //
 // Where it is used:
 //   - Instantiated across unit tests, example guides, and test servers.
@@ -56,7 +60,8 @@ func NewMemoryAdapter() *MemoryAdapter {
 // Name returns the driver identifier string for the memory adapter.
 //
 // Purpose:
-//   Identifies the adapter as "memory".
+//
+//	Identifies the adapter as "memory".
 //
 // Where it is used:
 //   - In engine initialization, routing, and logging.
@@ -70,7 +75,8 @@ func (a *MemoryAdapter) Name() string {
 // Capabilities returns the in-memory adapter capabilities matrix.
 //
 // Purpose:
-//   Reports supported capabilities (relational simulation, transactions, procedures, functions, query mode) for the in-memory store.
+//
+//	Reports supported capabilities (relational simulation, transactions, procedures, functions, query mode) for the in-memory store.
 //
 // Where it is used:
 //   - In DatasetService, validation engines, and capability matrix inspections.
@@ -335,11 +341,19 @@ func (a *MemoryAdapter) Create(ctx context.Context, ref model.ModelRef, data map
 
 // Find filters and paginates in-memory records.
 func (a *MemoryAdapter) Find(ctx context.Context, ref model.ModelRef, q query.Query) ([]map[string]any, int64, error) {
+	q = q.EnsureDebugTrace()
+	started := time.Now()
+	if len(q.Relations) > 0 || len(q.RelationSpecs) > 0 {
+		return nil, 0, fmt.Errorf("memory adapter does not hydrate relations directly; execute this query through the CRUD engine")
+	}
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 
 	tableName := ref.StorageName
 	rows := a.data[tableName]
+	if q.Debug {
+		log.Printf("[Query Debug][%s][Memory] phase=compiled table=%s relations=%v filters=%v fields=%v excluded_fields=%v sorts=%v pagination=%+v source_rows=%d", q.DebugTraceID, tableName, q.Relations, q.DebugFilters(q.Filters), q.Fields, q.ExcludedColumns, q.Sorts, q.Pagination, len(rows))
+	}
 
 	// 1. Filter
 	var filtered []map[string]any
@@ -376,6 +390,9 @@ func (a *MemoryAdapter) Find(ctx context.Context, ref model.ModelRef, q query.Qu
 		offset = 0
 	}
 	if offset > len(filtered) {
+		if q.Debug {
+			log.Printf("[Query Debug][%s][Memory] phase=complete duration=%s filtered_rows=%d returned_rows=0", q.DebugTraceID, time.Since(started), total)
+		}
 		return []map[string]any{}, total, nil
 	}
 
@@ -413,23 +430,55 @@ func (a *MemoryAdapter) Find(ctx context.Context, ref model.ModelRef, q query.Qu
 			}
 			projected[i] = proj
 		}
+		if q.Debug {
+			log.Printf("[Query Debug][%s][Memory] phase=complete duration=%s filtered_rows=%d returned_rows=%d projected=true", q.DebugTraceID, time.Since(started), total, len(projected))
+		}
 		return projected, total, nil
 	}
 
+	if q.Debug {
+		log.Printf("[Query Debug][%s][Memory] phase=complete duration=%s filtered_rows=%d returned_rows=%d projected=false", q.DebugTraceID, time.Since(started), total, len(result))
+		if elapsed := time.Since(started); q.IsSlow(elapsed) {
+			log.Printf("[Query Debug][%s][Memory] phase=slow-query duration=%s threshold_ms=%d", q.DebugTraceID, elapsed, q.SlowQueryThresholdMS)
+		}
+	}
 	return result, total, nil
 }
 
 // FindOne finds a record by ID.
 func (a *MemoryAdapter) FindOne(ctx context.Context, ref model.ModelRef, id any) (map[string]any, error) {
+	return a.FindOneWithQuery(ctx, ref, id, query.NewQuery())
+}
+
+func (a *MemoryAdapter) FindOneWithQuery(ctx context.Context, ref model.ModelRef, id any, q query.Query) (map[string]any, error) {
+	if len(q.Relations) > 0 || len(q.RelationSpecs) > 0 || len(q.Fields) > 0 || q.Debug {
+		primaryKey := ref.PrimaryKey
+		if primaryKey == "" {
+			primaryKey = "id"
+		}
+		q = q.Where(primaryKey, query.OpEq, id).LimitOffset(1, 0)
+		rows, _, err := a.Find(ctx, ref, q)
+		if err != nil {
+			return nil, err
+		}
+		if len(rows) == 0 {
+			return nil, fmt.Errorf("record with id '%v' not found", id)
+		}
+		return rows[0], nil
+	}
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 
 	tableName := ref.StorageName
 	rows := a.data[tableName]
+	primaryKey := ref.PrimaryKey
+	if primaryKey == "" {
+		primaryKey = "id"
+	}
 
 	idStr := fmt.Sprintf("%v", id)
 	for _, row := range rows {
-		if fmt.Sprintf("%v", row["id"]) == idStr {
+		if fmt.Sprintf("%v", row[primaryKey]) == idStr {
 			return cloneRecord(row), nil
 		}
 	}
@@ -699,6 +748,10 @@ func (t *MemoryTransaction) FindOne(ctx context.Context, m model.ModelRef, id an
 	return t.adapter.FindOne(ctx, m, id)
 }
 
+func (t *MemoryTransaction) FindOneWithQuery(ctx context.Context, m model.ModelRef, id any, q query.Query) (map[string]any, error) {
+	return t.adapter.FindOneWithQuery(ctx, m, id, q)
+}
+
 func (t *MemoryTransaction) Update(ctx context.Context, m model.ModelRef, id any, data map[string]any) (map[string]any, error) {
 	return t.adapter.Update(ctx, m, id, data)
 }
@@ -722,4 +775,3 @@ func (t *MemoryTransaction) Commit(ctx context.Context) error {
 func (t *MemoryTransaction) Rollback(ctx context.Context) error {
 	return nil
 }
-
