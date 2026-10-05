@@ -29,6 +29,11 @@ import (
 	"github.com/SanjayDrop5528/models-go-engine/schema"
 )
 
+const (
+	ansiColorReset      = "\033[0m"
+	ansiColorYellowBold = "\033[1;33m"
+)
+
 // MemoryAdapter is a concurrent, in-memory implementation of the Adapter interface.
 // It is ideal for rapid testing, mock setups, and verifying diff/migration logic.
 type MemoryAdapter struct {
@@ -430,17 +435,30 @@ func (a *MemoryAdapter) Find(ctx context.Context, ref model.ModelRef, q query.Qu
 			}
 			projected[i] = proj
 		}
+		elapsed := time.Since(started)
 		if q.Debug {
-			log.Printf("[Query Debug][%s][Memory] phase=complete duration=%s filtered_rows=%d returned_rows=%d projected=true", q.DebugTraceID, time.Since(started), total, len(projected))
+			log.Printf("[Query Debug][%s][Memory] phase=complete duration=%s filtered_rows=%d returned_rows=%d projected=true", q.DebugTraceID, elapsed, total, len(projected))
+		}
+		if q.IsSlow(elapsed) {
+			traceID := q.DebugTraceID
+			if traceID == "" {
+				traceID = "slow"
+			}
+			log.Printf("%s[Query Debug][%s][Memory] phase=slow-query duration=%s threshold_ms=%d%s", ansiColorYellowBold, traceID, elapsed, q.SlowQueryThresholdMS, ansiColorReset)
 		}
 		return projected, total, nil
 	}
 
+	elapsed := time.Since(started)
 	if q.Debug {
-		log.Printf("[Query Debug][%s][Memory] phase=complete duration=%s filtered_rows=%d returned_rows=%d projected=false", q.DebugTraceID, time.Since(started), total, len(result))
-		if elapsed := time.Since(started); q.IsSlow(elapsed) {
-			log.Printf("[Query Debug][%s][Memory] phase=slow-query duration=%s threshold_ms=%d", q.DebugTraceID, elapsed, q.SlowQueryThresholdMS)
+		log.Printf("[Query Debug][%s][Memory] phase=complete duration=%s filtered_rows=%d returned_rows=%d projected=false", q.DebugTraceID, elapsed, total, len(result))
+	}
+	if q.IsSlow(elapsed) {
+		traceID := q.DebugTraceID
+		if traceID == "" {
+			traceID = "slow"
 		}
+		log.Printf("%s[Query Debug][%s][Memory] phase=slow-query duration=%s threshold_ms=%d%s", ansiColorYellowBold, traceID, elapsed, q.SlowQueryThresholdMS, ansiColorReset)
 	}
 	return result, total, nil
 }
