@@ -54,6 +54,24 @@ type MemoryAdapter struct {
 //
 // When can it be used:
 //   - Whenever running database operations without external database dependencies.
+//
+// Parameters:
+//   - None.
+//
+// Returns:
+//   - result1 (*MemoryAdapter): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by NewMemoryAdapter and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - This function does not return an error.
+//
+// Note:
+//   - Callers should preserve the documented ownership and lifecycle of supplied values.
 func NewMemoryAdapter() *MemoryAdapter {
 	return &MemoryAdapter{
 		schemas: make(map[string]*schema.Schema),
@@ -73,6 +91,24 @@ func NewMemoryAdapter() *MemoryAdapter {
 //
 // When can it be used:
 //   - Whenever querying the adapter driver name.
+//
+// Parameters:
+//   - None.
+//
+// Returns:
+//   - result1 (string): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Name and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - This function does not return an error.
+//
+// Note:
+//   - Callers should preserve the documented ownership and lifecycle of supplied values.
 func (a *MemoryAdapter) Name() string {
 	return "memory"
 }
@@ -88,6 +124,24 @@ func (a *MemoryAdapter) Name() string {
 //
 // When can it be used:
 //   - At runtime whenever callers need to determine the capability profile of the Memory adapter.
+//
+// Parameters:
+//   - None.
+//
+// Returns:
+//   - result1 (adapter.Capabilities): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Capabilities and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - This function does not return an error.
+//
+// Note:
+//   - Callers should preserve the documented ownership and lifecycle of supplied values.
 func (a *MemoryAdapter) Capabilities() adapter.Capabilities {
 	return adapter.Capabilities{
 		Category:                    adapter.StorageCategoryRelational,
@@ -103,33 +157,156 @@ func (a *MemoryAdapter) Capabilities() adapter.Capabilities {
 }
 
 // NativeClient returns the *MemoryAdapter instance.
+//
+// Parameters:
+//   - None.
+//
+// Returns:
+//   - result1 (any): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by NativeClient and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - This function does not return an error.
+//
+// Note:
+//   - Callers should preserve the documented ownership and lifecycle of supplied values.
 func (a *MemoryAdapter) NativeClient() any {
 	return a
 }
 
 // DatabaseName returns the in-memory database name.
+//
+// Parameters:
+//   - None.
+//
+// Returns:
+//   - result1 (string): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by DatabaseName and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - This function does not return an error.
+//
+// Note:
+//   - Callers should preserve the documented ownership and lifecycle of supplied values.
 func (a *MemoryAdapter) DatabaseName() string {
 	return a.GetDatabaseName()
 }
 
 // GetDatabaseName returns the in-memory database name.
+//
+// Parameters:
+//   - None.
+//
+// Returns:
+//   - result1 (string): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by GetDatabaseName and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - This function does not return an error.
+//
+// Note:
+//   - Callers should preserve the documented ownership and lifecycle of supplied values.
 func (a *MemoryAdapter) GetDatabaseName() string {
 	return "in-memory"
 }
 
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//
+// Returns:
+//   - result1 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Connect and its owning package.
+//
+// Side Effects:
+//   - May update receiver state, persistent storage, or configured external dependencies.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (a *MemoryAdapter) Connect(ctx context.Context) error {
 	return a.EnsureMetadataTables(ctx)
 }
 
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//
+// Returns:
+//   - result1 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Ping and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (a *MemoryAdapter) Ping(ctx context.Context) error {
 	return nil
 }
 
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//
+// Returns:
+//   - result1 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Close and its owning package.
+//
+// Side Effects:
+//   - May update receiver state, persistent storage, or configured external dependencies.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (a *MemoryAdapter) Close(ctx context.Context) error {
 	return nil
 }
 
 // EnsureMetadataTables creates 'model_configs' and 'data_models' stores in memory if not present.
+//
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//
+// Returns:
+//   - result1 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by EnsureMetadataTables and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (a *MemoryAdapter) EnsureMetadataTables(ctx context.Context) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -143,6 +320,26 @@ func (a *MemoryAdapter) EnsureMetadataTables(ctx context.Context) error {
 }
 
 // ImportLiveMetadata returns in-memory stored model_configs and data_models.
+//
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//
+// Returns:
+//   - result1 ([]*model.ModelConfig): Returned value.
+//   - result2 ([]*model.DataModel): Returned value.
+//   - result3 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by ImportLiveMetadata and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (a *MemoryAdapter) ImportLiveMetadata(ctx context.Context) ([]*model.ModelConfig, []*model.DataModel, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -150,6 +347,26 @@ func (a *MemoryAdapter) ImportLiveMetadata(ctx context.Context) ([]*model.ModelC
 }
 
 // GetSchema returns a deep copy of the currently stored schema for the model.
+//
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - ref (model.ModelRef): Input value used by the operation.
+//
+// Returns:
+//   - result1 (*schema.Schema): Returned value.
+//   - result2 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by GetSchema and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (a *MemoryAdapter) GetSchema(ctx context.Context, ref model.ModelRef) (*schema.Schema, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -169,6 +386,25 @@ func (a *MemoryAdapter) GetSchema(ctx context.Context, ref model.ModelRef) (*sch
 }
 
 // ValidateSchemaPlan checks plan against in-memory storage.
+//
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - p (*plan.SchemaPlan): Input value used by the operation.
+//
+// Returns:
+//   - result1 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by ValidateSchemaPlan and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (a *MemoryAdapter) ValidateSchemaPlan(ctx context.Context, p *plan.SchemaPlan) error {
 	if p == nil {
 		return fmt.Errorf("plan cannot be nil")
@@ -177,6 +413,26 @@ func (a *MemoryAdapter) ValidateSchemaPlan(ctx context.Context, p *plan.SchemaPl
 }
 
 // PreviewSchemaChange generates preview statements for memory operations.
+//
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - p (*plan.SchemaPlan): Input value used by the operation.
+//
+// Returns:
+//   - result1 (*plan.SchemaPreview): Returned value.
+//   - result2 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by PreviewSchemaChange and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (a *MemoryAdapter) PreviewSchemaChange(ctx context.Context, p *plan.SchemaPlan) (*plan.SchemaPreview, error) {
 	preview := &plan.SchemaPreview{
 		ModelID:              p.ModelID,
@@ -203,6 +459,25 @@ func (a *MemoryAdapter) PreviewSchemaChange(ctx context.Context, p *plan.SchemaP
 }
 
 // ApplySchemaChange modifies the in-memory schema and migrates existing in-memory rows.
+//
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - p (*plan.SchemaPlan): Input value used by the operation.
+//
+// Returns:
+//   - result1 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by ApplySchemaChange and its owning package.
+//
+// Side Effects:
+//   - May update receiver state, persistent storage, or configured external dependencies.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (a *MemoryAdapter) ApplySchemaChange(ctx context.Context, p *plan.SchemaPlan) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -324,6 +599,27 @@ func (a *MemoryAdapter) ApplySchemaChange(ctx context.Context, p *plan.SchemaPla
 }
 
 // Create inserts a record into memory.
+//
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - ref (model.ModelRef): Input value used by the operation.
+//   - data (map[string]any): Input value used by the operation.
+//
+// Returns:
+//   - result1 (map[string]any): Returned value.
+//   - result2 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Create and its owning package.
+//
+// Side Effects:
+//   - May update receiver state, persistent storage, or configured external dependencies.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (a *MemoryAdapter) Create(ctx context.Context, ref model.ModelRef, data map[string]any) (map[string]any, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -345,6 +641,28 @@ func (a *MemoryAdapter) Create(ctx context.Context, ref model.ModelRef, data map
 }
 
 // Find filters and paginates in-memory records.
+//
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - ref (model.ModelRef): Input value used by the operation.
+//   - q (query.Query): Input value used by the operation.
+//
+// Returns:
+//   - result1 ([]map[string]any): Returned value.
+//   - result2 (int64): Returned value.
+//   - result3 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Find and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (a *MemoryAdapter) Find(ctx context.Context, ref model.ModelRef, q query.Query) ([]map[string]any, int64, error) {
 	q = q.EnsureDebugTrace()
 	started := time.Now()
@@ -464,10 +782,52 @@ func (a *MemoryAdapter) Find(ctx context.Context, ref model.ModelRef, q query.Qu
 }
 
 // FindOne finds a record by ID.
+//
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - ref (model.ModelRef): Input value used by the operation.
+//   - id (any): Input value used by the operation.
+//
+// Returns:
+//   - result1 (map[string]any): Returned value.
+//   - result2 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by FindOne and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (a *MemoryAdapter) FindOne(ctx context.Context, ref model.ModelRef, id any) (map[string]any, error) {
 	return a.FindOneWithQuery(ctx, ref, id, query.NewQuery())
 }
 
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - ref (model.ModelRef): Input value used by the operation.
+//   - id (any): Input value used by the operation.
+//   - q (query.Query): Input value used by the operation.
+//
+// Returns:
+//   - result1 (map[string]any): Returned value.
+//   - result2 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by FindOneWithQuery and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (a *MemoryAdapter) FindOneWithQuery(ctx context.Context, ref model.ModelRef, id any, q query.Query) (map[string]any, error) {
 	if len(q.Relations) > 0 || len(q.RelationSpecs) > 0 || len(q.Fields) > 0 || q.Debug {
 		primaryKey := ref.PrimaryKey
@@ -505,6 +865,28 @@ func (a *MemoryAdapter) FindOneWithQuery(ctx context.Context, ref model.ModelRef
 }
 
 // Update replaces a record by ID.
+//
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - ref (model.ModelRef): Input value used by the operation.
+//   - id (any): Input value used by the operation.
+//   - data (map[string]any): Input value used by the operation.
+//
+// Returns:
+//   - result1 (map[string]any): Returned value.
+//   - result2 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Update and its owning package.
+//
+// Side Effects:
+//   - May update receiver state, persistent storage, or configured external dependencies.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (a *MemoryAdapter) Update(ctx context.Context, ref model.ModelRef, id any, data map[string]any) (map[string]any, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -529,6 +911,28 @@ func (a *MemoryAdapter) Update(ctx context.Context, ref model.ModelRef, id any, 
 }
 
 // Patch updates specific fields by ID.
+//
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - ref (model.ModelRef): Input value used by the operation.
+//   - id (any): Input value used by the operation.
+//   - data (map[string]any): Input value used by the operation.
+//
+// Returns:
+//   - result1 (map[string]any): Returned value.
+//   - result2 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Patch and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (a *MemoryAdapter) Patch(ctx context.Context, ref model.ModelRef, id any, data map[string]any) (map[string]any, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -550,6 +954,26 @@ func (a *MemoryAdapter) Patch(ctx context.Context, ref model.ModelRef, id any, d
 }
 
 // Delete removes a record by ID.
+//
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - ref (model.ModelRef): Input value used by the operation.
+//   - id (any): Input value used by the operation.
+//
+// Returns:
+//   - result1 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Delete and its owning package.
+//
+// Side Effects:
+//   - May update receiver state, persistent storage, or configured external dependencies.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (a *MemoryAdapter) Delete(ctx context.Context, ref model.ModelRef, id any) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -732,6 +1156,26 @@ func cloneRecord(r map[string]any) map[string]any {
 }
 
 // Execute executes a generic operation in-memory.
+//
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - req (execution.ExecutionRequest): Input value used by the operation.
+//
+// Returns:
+//   - result1 (*execution.ExecutionResult): Returned value.
+//   - result2 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Execute and its owning package.
+//
+// Side Effects:
+//   - May update receiver state, persistent storage, or configured external dependencies.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (a *MemoryAdapter) Execute(ctx context.Context, req execution.ExecutionRequest) (*execution.ExecutionResult, error) {
 	return &execution.ExecutionResult{
 		Data: map[string]any{
@@ -745,6 +1189,25 @@ func (a *MemoryAdapter) Execute(ctx context.Context, req execution.ExecutionRequ
 }
 
 // Begin begins an in-memory transaction.
+//
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//
+// Returns:
+//   - result1 (adapter.Transaction): Returned value.
+//   - result2 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Begin and its owning package.
+//
+// Side Effects:
+//   - May update receiver state, persistent storage, or configured external dependencies.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (a *MemoryAdapter) Begin(ctx context.Context) (adapter.Transaction, error) {
 	return &MemoryTransaction{adapter: a}, nil
 }
@@ -754,42 +1217,238 @@ type MemoryTransaction struct {
 	adapter *MemoryAdapter
 }
 
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - m (model.ModelRef): Input value used by the operation.
+//   - data (map[string]any): Input value used by the operation.
+//
+// Returns:
+//   - result1 (map[string]any): Returned value.
+//   - result2 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Create and its owning package.
+//
+// Side Effects:
+//   - May update receiver state, persistent storage, or configured external dependencies.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (t *MemoryTransaction) Create(ctx context.Context, m model.ModelRef, data map[string]any) (map[string]any, error) {
 	return t.adapter.Create(ctx, m, data)
 }
 
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - m (model.ModelRef): Input value used by the operation.
+//   - q (query.Query): Input value used by the operation.
+//
+// Returns:
+//   - result1 ([]map[string]any): Returned value.
+//   - result2 (int64): Returned value.
+//   - result3 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Find and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (t *MemoryTransaction) Find(ctx context.Context, m model.ModelRef, q query.Query) ([]map[string]any, int64, error) {
 	return t.adapter.Find(ctx, m, q)
 }
 
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - m (model.ModelRef): Input value used by the operation.
+//   - id (any): Input value used by the operation.
+//
+// Returns:
+//   - result1 (map[string]any): Returned value.
+//   - result2 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by FindOne and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (t *MemoryTransaction) FindOne(ctx context.Context, m model.ModelRef, id any) (map[string]any, error) {
 	return t.adapter.FindOne(ctx, m, id)
 }
 
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - m (model.ModelRef): Input value used by the operation.
+//   - id (any): Input value used by the operation.
+//   - q (query.Query): Input value used by the operation.
+//
+// Returns:
+//   - result1 (map[string]any): Returned value.
+//   - result2 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by FindOneWithQuery and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (t *MemoryTransaction) FindOneWithQuery(ctx context.Context, m model.ModelRef, id any, q query.Query) (map[string]any, error) {
 	return t.adapter.FindOneWithQuery(ctx, m, id, q)
 }
 
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - m (model.ModelRef): Input value used by the operation.
+//   - id (any): Input value used by the operation.
+//   - data (map[string]any): Input value used by the operation.
+//
+// Returns:
+//   - result1 (map[string]any): Returned value.
+//   - result2 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Update and its owning package.
+//
+// Side Effects:
+//   - May update receiver state, persistent storage, or configured external dependencies.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (t *MemoryTransaction) Update(ctx context.Context, m model.ModelRef, id any, data map[string]any) (map[string]any, error) {
 	return t.adapter.Update(ctx, m, id, data)
 }
 
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - m (model.ModelRef): Input value used by the operation.
+//   - id (any): Input value used by the operation.
+//   - data (map[string]any): Input value used by the operation.
+//
+// Returns:
+//   - result1 (map[string]any): Returned value.
+//   - result2 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Patch and its owning package.
+//
+// Side Effects:
+//   - Does not intentionally mutate caller-owned input; configured dependencies may still be consulted.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (t *MemoryTransaction) Patch(ctx context.Context, m model.ModelRef, id any, data map[string]any) (map[string]any, error) {
 	return t.adapter.Patch(ctx, m, id, data)
 }
 
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - m (model.ModelRef): Input value used by the operation.
+//   - id (any): Input value used by the operation.
+//
+// Returns:
+//   - result1 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Delete and its owning package.
+//
+// Side Effects:
+//   - May update receiver state, persistent storage, or configured external dependencies.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (t *MemoryTransaction) Delete(ctx context.Context, m model.ModelRef, id any) error {
 	return t.adapter.Delete(ctx, m, id)
 }
 
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//   - req (execution.ExecutionRequest): Input value used by the operation.
+//
+// Returns:
+//   - result1 (*execution.ExecutionResult): Returned value.
+//   - result2 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Execute and its owning package.
+//
+// Side Effects:
+//   - May update receiver state, persistent storage, or configured external dependencies.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (t *MemoryTransaction) Execute(ctx context.Context, req execution.ExecutionRequest) (*execution.ExecutionResult, error) {
 	return t.adapter.Execute(ctx, req)
 }
 
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//
+// Returns:
+//   - result1 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Commit and its owning package.
+//
+// Side Effects:
+//   - May update receiver state, persistent storage, or configured external dependencies.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (t *MemoryTransaction) Commit(ctx context.Context) error {
 	return nil
 }
 
+// Parameters:
+//   - ctx (context.Context): Input value used by the operation.
+//
+// Returns:
+//   - result1 (error): Returned value.
+//
+// Business Rules:
+//   - Follows the invariants documented by Rollback and its owning package.
+//
+// Side Effects:
+//   - May update receiver state, persistent storage, or configured external dependencies.
+//
+// Errors:
+//   - Returns validation, configuration, context, or underlying dependency errors.
+//
+// Note:
+//   - The context controls cancellation and request lifetime.
 func (t *MemoryTransaction) Rollback(ctx context.Context) error {
 	return nil
 }
