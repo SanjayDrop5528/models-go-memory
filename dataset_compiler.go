@@ -94,9 +94,20 @@ func (c *MemoryDataSetCompiler) Compile(ctx context.Context, ast *planner.QueryA
 
 	var selectCols []string
 	for _, p := range ast.Projections {
-		colExpr := fmt.Sprintf("\"%s\".\"%s\"", p.SourceTable, p.SourceField)
-		if p.Alias != "" && p.Alias != p.SourceField {
-			colExpr += fmt.Sprintf(" AS \"%s\"", p.Alias)
+		var colExpr string
+		if strings.Contains(p.SourceField, ".") {
+			parts := strings.Split(p.SourceField, ".")
+			colExpr = fmt.Sprintf("(\"%s\".\"%s\"->>'%s')", p.SourceTable, parts[0], parts[1])
+			if p.Alias != "" && p.Alias != p.SourceField {
+				colExpr += fmt.Sprintf(" AS \"%s\"", p.Alias)
+			} else {
+				colExpr += fmt.Sprintf(" AS \"%s\"", p.SourceField)
+			}
+		} else {
+			colExpr = fmt.Sprintf("\"%s\".\"%s\"", p.SourceTable, p.SourceField)
+			if p.Alias != "" && p.Alias != p.SourceField {
+				colExpr += fmt.Sprintf(" AS \"%s\"", p.Alias)
+			}
 		}
 		selectCols = append(selectCols, colExpr)
 	}
